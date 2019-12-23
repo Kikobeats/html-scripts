@@ -6,7 +6,6 @@
 [![Dependency status](https://img.shields.io/david/Kikobeats/html-scripts.svg?style=flat-square)](https://david-dm.org/Kikobeats/html-scripts)
 [![Dev Dependencies Status](https://img.shields.io/david/dev/Kikobeats/html-scripts.svg?style=flat-square)](https://david-dm.org/Kikobeats/html-scripts#info=devDependencies)
 [![NPM Status](https://img.shields.io/npm/dm/html-scripts.svg?style=flat-square)](https://www.npmjs.org/package/html-scripts)
-[![Donate](https://img.shields.io/badge/donate-paypal-blue.svg?style=flat-square)](https://paypal.me/Kikobeats)
 
 > It parses HTML markup and returns you all the scripts.
 
