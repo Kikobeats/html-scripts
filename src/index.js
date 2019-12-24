@@ -2,11 +2,17 @@
 
 const { parse } = require('himalaya')
 
+const getValue = value => {
+  if (value === null) return true
+  if (value === '1') return true
+  return value
+}
+
 const fromPairs = collection =>
   collection.reduce(
     (acc, { key, value }) => ({
       ...acc,
-      [key]: value
+      [key]: getValue(value)
     }),
     {}
   )
