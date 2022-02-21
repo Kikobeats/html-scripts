@@ -1,10 +1,7 @@
 # html-scripts
 
 ![Last version](https://img.shields.io/github/tag/Kikobeats/html-scripts.svg?style=flat-square)
-[![Build Status](https://img.shields.io/travis/com/Kikobeats/html-scripts/master.svg?style=flat-square)](https://travis-ci.com/Kikobeats/html-scripts)
 [![Coverage Status](https://img.shields.io/coveralls/Kikobeats/html-scripts.svg?style=flat-square)](https://coveralls.io/github/Kikobeats/html-scripts)
-[![Dependency status](https://img.shields.io/david/Kikobeats/html-scripts.svg?style=flat-square)](https://david-dm.org/Kikobeats/html-scripts)
-[![Dev Dependencies Status](https://img.shields.io/david/dev/Kikobeats/html-scripts.svg?style=flat-square)](https://david-dm.org/Kikobeats/html-scripts#info=devDependencies)
 [![NPM Status](https://img.shields.io/npm/dm/html-scripts.svg?style=flat-square)](https://www.npmjs.org/package/html-scripts)
 
 > It parses HTML markup and returns you all the scripts.
