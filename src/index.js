@@ -9,10 +9,10 @@ const getValue = value => {
 }
 
 const fromPairs = collection =>
-  collection.reduce(
-    (acc, { key, value }) => Object.assign(acc, { [key]: getValue(value) }),
-    {}
-  )
+  collection.reduce((acc, { key, value }) => {
+    acc[key] = getValue(value)
+    return acc
+  }, {})
 
 module.exports = html => {
   const json = parse(html).filter(({ tagName }) => tagName === 'script')
