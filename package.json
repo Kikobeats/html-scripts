@@ -2,7 +2,7 @@
   "name": "html-scripts",
   "description": "It parses HTML markup and returns you all the scripts.",
   "homepage": "https://nicedoc.io/Kikobeats/html-scripts",
-  "version": "1.0.11",
+  "version": "1.0.12",
   "main": "src/index.js",
   "author": {
     "email": "josefrancisco.verdu@gmail.com",
