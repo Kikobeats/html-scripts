@@ -1,15 +1,14 @@
 {
   "name": "html-scripts",
-  "description": "It parses HTML markup and returns you all the scripts.",
-  "homepage": "https://nicedoc.io/Kikobeats/html-scripts",
-  "version": "1.0.14",
+  "description": "Parse HTML markup and extract every script tag, source URL, and inline script content.",
+  "homepage": "https://github.com/Kikobeats/html-scripts",
+  "version": "1.0.4",
   "main": "src/index.js",
   "author": {
     "email": "josefrancisco.verdu@gmail.com",
     "name": "Kiko Beats",
     "url": "https://kikobeats.com"
   },
-  "contributors": [],
   "repository": {
     "type": "git",
     "url": "git+https://github.com/Kikobeats/html-scripts.git"
@@ -18,11 +17,16 @@
     "url": "https://github.com/Kikobeats/html-scripts/issues"
   },
   "keywords": [
+    "dom",
+    "extract",
     "html",
     "iframe",
     "inject",
+    "inline",
     "parse",
-    "scripts"
+    "script-tag",
+    "scripts",
+    "src"
   ],
   "dependencies": {
     "himalaya": "~1.1.0"
@@ -30,15 +34,12 @@
   "devDependencies": {
     "@commitlint/cli": "latest",
     "@commitlint/config-conventional": "latest",
-    "ava": "latest",
     "c8": "latest",
     "ci-publish": "latest",
-    "conventional-github-releaser": "latest",
     "finepack": "latest",
     "git-authors-cli": "latest",
+    "github-generate-release": "latest",
     "nano-staged": "latest",
-    "npm-check-updates": "latest",
-    "prettier-standard": "latest",
     "simple-git-hooks": "latest",
     "standard": "latest",
     "standard-markdown": "latest",
@@ -52,24 +53,27 @@
   ],
   "scripts": {
     "clean": "rm -rf node_modules",
-    "contributors": "(git-authors-cli && finepack && git add package.json && git commit -m 'build: contributors' --no-verify) || true",
+    "contributors": "(npx git-authors-cli && npx finepack && git add package.json && git commit -m 'build: contributors' --no-verify) || true",
     "coverage": "nyc report --reporter=text-lcov | coveralls",
     "lint": "standard-markdown README.md && standard",
     "postrelease": "npm run release:tags && npm run release:github && (ci-publish || npm publish --access=public)",
-    "prerelease": "npm run update:check && npm run contributors",
+    "prerelease": "npm run contributors",
     "pretest": "npm run lint",
     "release": "standard-version -a",
-    "release:github": "conventional-github-releaser -p angular",
+    "release:github": "github-generate-release",
     "release:tags": "git push --follow-tags origin HEAD:master",
-    "test": "c8 ava",
-    "update": "ncu -u",
-    "update:check": "ncu -- --error-level 2"
+    "test": "c8 ava"
   },
   "license": "MIT",
   "commitlint": {
     "extends": [
       "@commitlint/config-conventional"
-    ]
+    ],
+    "rules": {
+      "body-max-line-length": [
+        0
+      ]
+    }
   },
   "nano-staged": {
     "*.js": [
