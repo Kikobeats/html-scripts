@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+### 1.0.14 (2026-07-30)
+
+
+### Bug Fixes
+
+* collect script tags nested under html/head/body ([#14](https://github.com/Kikobeats/html-scripts/issues/14)) ([890c429](https://github.com/Kikobeats/html-scripts/commit/890c429a7dda7d5fe3f0840b499b0a2d99ce8a33))
+
 ### 1.0.13 (2025-11-21)
 
 ### 1.0.12 (2025-10-15)
