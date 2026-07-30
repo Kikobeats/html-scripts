@@ -14,7 +14,15 @@ const fromPairs = collection =>
     return acc
   }, {})
 
+const collectScripts = (nodes, acc = []) => {
+  for (const node of nodes) {
+    if (node.tagName === 'script') acc.push(node)
+    if (node.children) collectScripts(node.children, acc)
+  }
+  return acc
+}
+
 module.exports = html => {
-  const json = parse(html).filter(({ tagName }) => tagName === 'script')
-  return json.map(({ attributes }) => fromPairs(attributes))
+  const scripts = collectScripts(parse(html))
+  return scripts.map(({ attributes }) => fromPairs(attributes))
 }

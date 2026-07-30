@@ -1,8 +1,15 @@
 'use strict'
 
-const test = require('ava')
+const test = require('ava').default
 
 const parseIframe = require('../')
+
+test('detect scripts nested under html/body', t => {
+  const scripts = parseIframe(
+    '<html><head><script src="/head.js"></script></head><body><script src="/body.js"></script></body></html>'
+  )
+  t.deepEqual(scripts, [{ src: '/head.js' }, { src: '/body.js' }])
+})
 
 test('detect scripts from twitter iframe', t => {
   const html =
