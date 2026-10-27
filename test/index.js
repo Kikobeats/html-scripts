@@ -96,3 +96,28 @@ test('ignore scripts inside template', t => {
     [{ src: '/after.js' }]
   )
 })
+
+test('a self-closing script keeps its content as text until </script>', t => {
+  t.deepEqual(
+    parseIframe(
+      '<script src="/a.js"/>var s = "<script src=/evil.js>";</script><script src="/b.js"></script>'
+    ),
+    [{ src: '/a.js' }, { src: '/b.js' }]
+  )
+})
+
+test('a self-closing script inside svg ends right away', t => {
+  t.deepEqual(
+    parseIframe(
+      '<svg><script href="/x.js"/></svg><script src="/y.js"></script>'
+    ),
+    [{ href: '/x.js' }, { src: '/y.js' }]
+  )
+})
+
+test('non-string input is read as a string', t => {
+  t.deepEqual(parseIframe(Buffer.from('<script src="/buf.js"></script>')), [
+    { src: '/buf.js' }
+  ])
+  t.deepEqual(parseIframe(undefined), [])
+})
