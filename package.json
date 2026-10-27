@@ -2,7 +2,7 @@
   "name": "html-scripts",
   "description": "Parse HTML markup and extract every script tag, source URL, and inline script content.",
   "homepage": "https://github.com/Kikobeats/html-scripts",
-  "version": "1.0.6",
+  "version": "1.0.14",
   "main": "src/index.js",
   "author": {
     "email": "josefrancisco.verdu@gmail.com",
@@ -60,9 +60,10 @@
     "coverage": "nyc report --reporter=text-lcov | coveralls",
     "lint": "standard-markdown README.md && standard",
     "postrelease": "npm run release:tags && npm run release:github && (ci-publish || npm publish --access=public)",
-    "prerelease": "npm run contributors",
+    "prerelease": "npm run release:check && npm run contributors",
     "pretest": "npm run lint",
     "release": "standard-version -a",
+    "release:check": "node -e \"const local = require('./package.json').version; const published = require('child_process').execSync('npm view html-scripts version').toString().trim(); if (local !== published) { console.error('package.json version ' + local + ' does not match npm latest ' + published); process.exit(1) }\"",
     "release:github": "github-generate-release",
     "release:tags": "git push --follow-tags origin HEAD:master",
     "test": "c8 ava"
