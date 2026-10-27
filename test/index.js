@@ -31,3 +31,317 @@ test('detect scripts from instagram iframe', t => {
   const scripts = parseIframe(html)
   t.snapshot(scripts)
 })
+
+test('lowercase attribute names', t => {
+  t.deepEqual(parseIframe('<SCRIPT SRC="/a.js" Async></SCRIPT>'), [
+    { src: '/a.js', async: true }
+  ])
+})
+
+test('decode entities in attribute values', t => {
+  t.deepEqual(
+    parseIframe('<script src="/a.js?x=1&amp;y=&lt;2&gt;"></script>'),
+    [{ src: '/a.js?x=1&y=<2>' }]
+  )
+})
+
+test('map boolean and "1" attribute values to true', t => {
+  t.deepEqual(
+    parseIframe(
+      '<script async defer="1" data-empty="" data-zero="0"></script>'
+    ),
+    [{ async: true, defer: true, 'data-empty': '', 'data-zero': '0' }]
+  )
+})
+
+test('keep the last value of a repeated attribute', t => {
+  t.deepEqual(parseIframe('<script src="/a.js" SRC="/b.js"></script>'), [
+    { src: '/b.js' }
+  ])
+})
+
+test('keep unquoted attribute values containing slashes', t => {
+  t.deepEqual(
+    parseIframe(
+      '<script src=https://cdn.example.com/a.js async></script><script type=module src=/m.js></script>'
+    ),
+    [
+      { src: 'https://cdn.example.com/a.js', async: true },
+      { type: 'module', src: '/m.js' }
+    ]
+  )
+})
+
+test('detect scripts after a stray closing script tag', t => {
+  t.deepEqual(
+    parseIframe('<script>a()</script></script><script src="/b.js"></script>'),
+    [{}, { src: '/b.js' }]
+  )
+})
+
+test('ignore markup inside script content and comments', t => {
+  t.deepEqual(
+    parseIframe(
+      '<script>document.write("<script src=x><\\/script>")</script><!-- <script src="/c.js"></script> --><script src="/d.js"></script>'
+    ),
+    [{}, { src: '/d.js' }]
+  )
+})
+
+test('ignore scripts inside template', t => {
+  t.deepEqual(
+    parseIframe(
+      '<template><script src="/t.js"></script></template><script src="/after.js"></script>'
+    ),
+    [{ src: '/after.js' }]
+  )
+})
+
+test('a self-closing script keeps its content as text until </script>', t => {
+  t.deepEqual(
+    parseIframe(
+      '<script src="/a.js"/>var s = "<script src=/evil.js>";</script><script src="/b.js"></script>'
+    ),
+    [{ src: '/a.js' }, { src: '/b.js' }]
+  )
+})
+
+test('a script inside an svg title is a script', t => {
+  t.deepEqual(
+    parseIframe(
+      '<svg><title><script src="/a.js"></script></title></svg><script src="/b.js"></script>'
+    ),
+    [{ src: '/a.js' }, { src: '/b.js' }]
+  )
+  t.deepEqual(
+    parseIframe(
+      '<svg><title><script src="/a.js"/></title></svg><script src="/b.js"></script>'
+    ),
+    [{ src: '/a.js' }]
+  )
+})
+
+test('a script inside an html title is text', t => {
+  t.deepEqual(
+    parseIframe(
+      '<title><script src="/a.js"></script></title><script src="/b.js"></script>'
+    ),
+    [{ src: '/b.js' }]
+  )
+})
+
+test('a script inside an svg script is still a script', t => {
+  t.deepEqual(
+    parseIframe(
+      '<svg><script><script src="/inner.js"></script></script></svg>'
+    ),
+    [{}, { src: '/inner.js' }]
+  )
+})
+
+test('a self-closing script inside svg ends right away', t => {
+  t.deepEqual(
+    parseIframe(
+      '<svg><script href="/x.js"/></svg><script src="/y.js"></script>'
+    ),
+    [{ href: '/x.js' }, { src: '/y.js' }]
+  )
+})
+
+test('a self-closing script inside math ends right away', t => {
+  t.deepEqual(
+    parseIframe(
+      '<math><script href="/x.js"/></math><script src="/y.js"></script>'
+    ),
+    [{ href: '/x.js' }, { src: '/y.js' }]
+  )
+})
+
+test('closing an integration point returns to foreign content', t => {
+  t.deepEqual(
+    parseIframe(
+      '<svg><desc></desc><script href="/x.js"/></svg><script src="/y.js"></script>'
+    ),
+    [{ href: '/x.js' }, { src: '/y.js' }]
+  )
+  t.deepEqual(
+    parseIframe(
+      '<math><mi></mi><script href="/x.js"/></math><script src="/y.js"></script>'
+    ),
+    [{ href: '/x.js' }, { src: '/y.js' }]
+  )
+})
+
+test('a self-closing script inside an html integration point stays open', t => {
+  const points = [
+    ['svg', 'foreignObject'],
+    ['svg', 'desc'],
+    ['math', 'mi'],
+    ['math', 'mo'],
+    ['math', 'mn'],
+    ['math', 'ms'],
+    ['math', 'mtext']
+  ]
+  for (const [outer, inner] of points) {
+    t.deepEqual(
+      parseIframe(
+        `<${outer}><${inner}><script src="/a.js"/></${inner}></${outer}><script src="/b.js"></script>`
+      ),
+      [{ src: '/a.js' }],
+      inner
+    )
+  }
+})
+
+test('a script end tag still closes a self-closing html script', t => {
+  t.deepEqual(
+    parseIframe(
+      '<svg><foreignObject><script src="/a.js"/></foreignObject></svg></script><script href="/b.js"></script>'
+    ),
+    [{ src: '/a.js' }, { href: '/b.js' }]
+  )
+})
+
+test('annotation-xml stays in math without an html encoding', t => {
+  t.deepEqual(
+    parseIframe(
+      '<math><annotation-xml><script src="/a.js"/></annotation-xml></math><script src="/b.js"></script>'
+    ),
+    [{ src: '/a.js' }, { src: '/b.js' }]
+  )
+  t.deepEqual(
+    parseIframe(
+      '<math><annotation-xml><script src="/a.js"/><script src="/inner.js"></script></annotation-xml></math>'
+    ),
+    [{ src: '/a.js' }, { src: '/inner.js' }]
+  )
+  t.deepEqual(
+    parseIframe(
+      '<math><annotation-xml encoding="text/plain" encoding="text/html"><script src="/a.js"/></annotation-xml></math><script src="/b.js"></script>'
+    ),
+    [{ src: '/a.js' }, { src: '/b.js' }]
+  )
+})
+
+test('closing an html annotation-xml returns to math', t => {
+  t.deepEqual(
+    parseIframe(
+      '<math><annotation-xml encoding="text/html"></annotation-xml><script src="/a.js"/></math><script src="/b.js"></script>'
+    ),
+    [{ src: '/a.js' }, { src: '/b.js' }]
+  )
+})
+
+test('annotation-xml with an html encoding keeps the script open', t => {
+  for (const encoding of ['text/html', 'application/xhtml+xml', 'TEXT/HTML']) {
+    t.deepEqual(
+      parseIframe(
+        `<math><annotation-xml encoding="${encoding}"><script src="/a.js"/></annotation-xml></math><script src="/b.js"></script>`
+      ),
+      [{ src: '/a.js' }],
+      encoding
+    )
+  }
+})
+
+test('a script end tag may have whitespace before >', t => {
+  for (const gap of [' ', '\n', '\t', '\r', '\f']) {
+    t.deepEqual(
+      parseIframe(
+        `<div><script src="/a.js"/></div></script${gap}><script src="/b.js"></script>`
+      ),
+      [{ src: '/a.js' }, { src: '/b.js' }],
+      JSON.stringify(gap)
+    )
+  }
+})
+
+test('raw text elements inside svg are markup', t => {
+  t.deepEqual(
+    parseIframe(
+      '<svg><iframe><script src="/a.js"></script></iframe></svg><script src="/b.js"></script>'
+    ),
+    [{ src: '/a.js' }, { src: '/b.js' }]
+  )
+})
+
+test('plaintext has no end tag', t => {
+  t.deepEqual(
+    parseIframe('<plaintext></plaintext><script src="/b.js"></script>'),
+    []
+  )
+})
+
+test('an unclosed script runs to the end of the document', t => {
+  t.deepEqual(parseIframe('<script src="/a.js"/><div><script src="/b.js">'), [
+    { src: '/a.js' }
+  ])
+})
+
+test('an unquoted slash is part of the attribute value', t => {
+  t.deepEqual(parseIframe('<script src=a/><script src="/b.js"></script>'), [
+    { src: 'a/' }
+  ])
+})
+
+test('an end tag inside a script does not close the element around it', t => {
+  t.deepEqual(
+    parseIframe(
+      '<template><script src="/a.js"/></template></script><script src="/b.js"></script>'
+    ),
+    []
+  )
+})
+
+test('raw text elements hide the scripts inside them', t => {
+  for (const tag of ['iframe', 'noembed', 'noframes', 'noscript']) {
+    t.deepEqual(
+      parseIframe(
+        `<${tag}><script src="/a.js"></script></${tag}><script src="/b.js"></script>`
+      ),
+      [{ src: '/b.js' }],
+      tag
+    )
+  }
+  t.deepEqual(
+    parseIframe(
+      '<script src="/a.js"></script><plaintext><script src="/b.js"></script>'
+    ),
+    [{ src: '/a.js' }]
+  )
+})
+
+test('an implied end tag does not end an html script', t => {
+  t.deepEqual(
+    parseIframe('<script src="/a.js"/><body><script src="/b.js"></script>'),
+    [{ src: '/a.js' }]
+  )
+  t.deepEqual(
+    parseIframe(
+      '<div><script src="/a.js"/></div><script src="/b.js"></script>'
+    ),
+    [{ src: '/a.js' }]
+  )
+  t.deepEqual(
+    parseIframe(
+      '<head><script src="/a.js"></script></head><body><script src="/b.js"></script>'
+    ),
+    [{ src: '/a.js' }, { src: '/b.js' }]
+  )
+})
+
+test('non-string input is read as a string', t => {
+  t.deepEqual(parseIframe(Buffer.from('<script src="/buf.js"></script>')), [
+    { src: '/buf.js' }
+  ])
+  t.deepEqual(parseIframe(undefined), [])
+})
+
+test('a stray </template> after a self-closing script keeps later scripts', t => {
+  t.deepEqual(
+    parseIframe(
+      '<script src="/a.js"/><template><script></script></template><script src="/b.js"></script>'
+    ),
+    [{ src: '/a.js' }, { src: '/b.js' }]
+  )
+})

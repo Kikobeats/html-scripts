@@ -22,7 +22,7 @@ const scripts = getScripts('<blockquote class="twitter-tweet"><p lang="en" dir="
 console.log(scripts)
 // [
 //   {
-//     async: null,
+//     async: true,
 //     charset: 'utf-8',
 //     src: 'https://platform.twitter.com/widgets.js',
 //   },
