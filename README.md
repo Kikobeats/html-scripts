@@ -1,8 +1,8 @@
 # html-scripts
 
-![Last version](https://img.shields.io/github/tag/Kikobeats/html-scripts.svg?style=flat-square)
-[![Coverage Status](https://img.shields.io/coveralls/Kikobeats/html-scripts.svg?style=flat-square)](https://coveralls.io/github/Kikobeats/html-scripts)
-[![NPM Status](https://img.shields.io/npm/dm/html-scripts.svg?style=flat-square)](https://www.npmjs.org/package/html-scripts)
+[![Last version](https://img.shields.io/github/v/tag/Kikobeats/html-scripts?style=flat-square)](https://github.com/Kikobeats/html-scripts/releases)
+[![Coverage Status](https://img.shields.io/coverallsCoverage/github/Kikobeats/html-scripts?style=flat-square)](https://coveralls.io/github/Kikobeats/html-scripts)
+[![NPM Status](https://img.shields.io/npm/dm/html-scripts?style=flat-square)](https://www.npmjs.com/package/html-scripts)
 
 > It parses HTML markup and returns you all the scripts.
 
@@ -34,4 +34,4 @@ console.log(scripts)
 **html-scripts** © [Kiko Beats](https://kikobeats.com), released under the [MIT](https://github.com/Kikobeats/html-scripts/blob/master/LICENSE.md) License.<br>
 Authored and maintained by Kiko Beats with help from [contributors](https://github.com/Kikobeats/html-scripts/contributors).
 
-> [kikobeats.com](https://kikobeats.com) · GitHub [Kiko Beats](https://github.com/Kikobeats) · Twitter [@Kikobeats](https://twitter.com/Kikobeats)
+> [kikobeats.com](https://kikobeats.com) · GitHub [Kiko Beats](https://github.com/Kikobeats) · X [@Kikobeats](https://x.com/Kikobeats)
