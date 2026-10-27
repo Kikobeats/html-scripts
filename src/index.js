@@ -34,7 +34,7 @@ module.exports = html => {
         return
       }
       if (isInScript) return
-      if (name === 'template') templateDepth--
+      if (name === 'template' && templateDepth > 0) templateDepth--
     }
   })
   parser.end(String(html))

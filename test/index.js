@@ -121,3 +121,12 @@ test('non-string input is read as a string', t => {
   ])
   t.deepEqual(parseIframe(undefined), [])
 })
+
+test('a stray </template> after a self-closing script keeps later scripts', t => {
+  t.deepEqual(
+    parseIframe(
+      '<script src="/a.js"/><template><script></script></template><script src="/b.js"></script>'
+    ),
+    [{ src: '/a.js' }, { src: '/b.js' }]
+  )
+})
