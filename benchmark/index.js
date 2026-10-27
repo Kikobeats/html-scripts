@@ -163,8 +163,9 @@ const assertScripts = (entry, scripts) => {
 }
 
 const runOnce = entry => {
-  for (let i = 0; i < entry.iterations; i++)
+  for (let i = 0; i < entry.iterations; i++) {
     assertScripts(entry, getScripts(entry.html))
+  }
 }
 
 const sample = entry => {
