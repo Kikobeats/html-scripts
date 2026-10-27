@@ -31,3 +31,68 @@ test('detect scripts from instagram iframe', t => {
   const scripts = parseIframe(html)
   t.snapshot(scripts)
 })
+
+test('lowercase attribute names', t => {
+  t.deepEqual(parseIframe('<SCRIPT SRC="/a.js" Async></SCRIPT>'), [
+    { src: '/a.js', async: true }
+  ])
+})
+
+test('decode entities in attribute values', t => {
+  t.deepEqual(
+    parseIframe('<script src="/a.js?x=1&amp;y=&lt;2&gt;"></script>'),
+    [{ src: '/a.js?x=1&y=<2>' }]
+  )
+})
+
+test('map boolean and "1" attribute values to true', t => {
+  t.deepEqual(
+    parseIframe(
+      '<script async defer="1" data-empty="" data-zero="0"></script>'
+    ),
+    [{ async: true, defer: true, 'data-empty': '', 'data-zero': '0' }]
+  )
+})
+
+test('keep the last value of a repeated attribute', t => {
+  t.deepEqual(parseIframe('<script src="/a.js" SRC="/b.js"></script>'), [
+    { src: '/b.js' }
+  ])
+})
+
+test('keep unquoted attribute values containing slashes', t => {
+  t.deepEqual(
+    parseIframe(
+      '<script src=https://cdn.example.com/a.js async></script><script type=module src=/m.js></script>'
+    ),
+    [
+      { src: 'https://cdn.example.com/a.js', async: true },
+      { type: 'module', src: '/m.js' }
+    ]
+  )
+})
+
+test('detect scripts after a stray closing script tag', t => {
+  t.deepEqual(
+    parseIframe('<script>a()</script></script><script src="/b.js"></script>'),
+    [{}, { src: '/b.js' }]
+  )
+})
+
+test('ignore markup inside script content and comments', t => {
+  t.deepEqual(
+    parseIframe(
+      '<script>document.write("<script src=x><\\/script>")</script><!-- <script src="/c.js"></script> --><script src="/d.js"></script>'
+    ),
+    [{}, { src: '/d.js' }]
+  )
+})
+
+test('ignore scripts inside template', t => {
+  t.deepEqual(
+    parseIframe(
+      '<template><script src="/t.js"></script></template><script src="/after.js"></script>'
+    ),
+    [{ src: '/after.js' }]
+  )
+})

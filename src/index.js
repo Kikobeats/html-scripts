@@ -1,28 +1,30 @@
 'use strict'
 
-const { parse } = require('himalaya')
+const { Parser } = require('htmlparser2')
 
-const getValue = value => {
-  if (value === null) return true
+const getValue = (value, quote) => {
+  if (quote === undefined) return true
   if (value === '1') return true
   return value
 }
 
-const fromPairs = collection =>
-  collection.reduce((acc, { key, value }) => {
-    acc[key] = getValue(value)
-    return acc
-  }, {})
-
-const collectScripts = (nodes, acc = []) => {
-  for (const node of nodes) {
-    if (node.tagName === 'script') acc.push(node)
-    if (node.children) collectScripts(node.children, acc)
-  }
-  return acc
-}
-
 module.exports = html => {
-  const scripts = collectScripts(parse(html))
-  return scripts.map(({ attributes }) => fromPairs(attributes))
+  const scripts = []
+  let attributes = null
+  let templateDepth = 0
+  const parser = new Parser({
+    onopentagname: name => {
+      if (name === 'template') templateDepth++
+      attributes = name === 'script' && templateDepth === 0 ? {} : null
+      if (attributes) scripts.push(attributes)
+    },
+    onattribute: (name, value, quote) => {
+      if (attributes) attributes[name] = getValue(value, quote)
+    },
+    onclosetag: name => {
+      if (name === 'template') templateDepth--
+    }
+  })
+  parser.end(html)
+  return scripts
 }
