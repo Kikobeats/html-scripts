@@ -620,3 +620,39 @@ test('svg directly inside a math annotation-xml is svg', t => {
     []
   )
 })
+
+test('a raw-text end tag may end with a solidus', t => {
+  t.deepEqual(
+    parseIframe('<script src="/a.js"></script/><script src="/b.js"></script>'),
+    [{ src: '/a.js' }, { src: '/b.js' }]
+  )
+  t.deepEqual(
+    parseIframe('<script src="/a.js"></SCRIPT/><script src="/b.js"></script>'),
+    [{ src: '/a.js' }, { src: '/b.js' }]
+  )
+  t.deepEqual(
+    parseIframe(
+      '<div><script src="/a.js"></script/foo></div><script src="/b.js"></script>'
+    ),
+    [{ src: '/a.js' }, { src: '/b.js' }]
+  )
+  t.deepEqual(
+    parseIframe(
+      '<script src="/a.js">var x="</script/><script src=\'/evil.js\'>"</script><script src="/b.js"></script>'
+    ),
+    [{ src: '/a.js' }, { src: '/evil.js' }, { src: '/b.js' }]
+  )
+  for (const tag of ['style', 'title', 'textarea', 'xmp']) {
+    t.deepEqual(
+      parseIframe(`<${tag}></${tag}/><script src="/b.js"></script>`),
+      [{ src: '/b.js' }],
+      tag
+    )
+  }
+  t.deepEqual(
+    parseIframe(
+      '<script src="/a.js"></scripting><script src="/b.js"></script>'
+    ),
+    [{ src: '/a.js' }]
+  )
+})
