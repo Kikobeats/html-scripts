@@ -60,6 +60,17 @@ test('keep the last value of a repeated attribute', t => {
   ])
 })
 
+test('keep an attribute named __proto__', t => {
+  const proto = '__proto__'
+  const [script] = parseIframe(
+    `<script ${proto}="x" src="/a.js" ${proto}="y"></script>`
+  )
+  t.is(script[proto], 'y')
+  t.is(script.src, '/a.js')
+  t.is(Object.getPrototypeOf(script), Object.prototype)
+  t.is(parseIframe(`<script ${proto}></script>`)[0][proto], true)
+})
+
 test('keep unquoted attribute values containing slashes', t => {
   t.deepEqual(
     parseIframe(

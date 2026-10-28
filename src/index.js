@@ -81,12 +81,27 @@ const getValue = (value, quote) => {
   return value
 }
 
+// Assignment goes through the prototype setter for "__proto__" and never
+// creates an own property.
+const defineOwn = (object, key, value) => {
+  if (key === '__proto__') {
+    Object.defineProperty(object, key, {
+      value,
+      writable: true,
+      enumerable: true,
+      configurable: true
+    })
+    return
+  }
+  object[key] = value
+}
+
 const setLastValue = (attributes, name, value, quote) => {
-  attributes[name] = getValue(value, quote)
+  defineOwn(attributes, name, getValue(value, quote))
 }
 
 const setFirstValue = (attributes, name, value) => {
-  if (!Object.hasOwn(attributes, name)) attributes[name] = value
+  if (!Object.hasOwn(attributes, name)) defineOwn(attributes, name, value)
 }
 
 const isHtmlEncoding = value => {
@@ -118,7 +133,7 @@ const extract = (html, tagNames, setAttribute, scripting) => {
   const source = String(html)
   const targets = new Set(tagNames)
   const elements = {}
-  for (const name of targets) elements[name] = []
+  for (const name of targets) defineOwn(elements, name, [])
   const namespaces = [HTML]
   const templates = []
   const mathAnnotationDepths = []
@@ -158,6 +173,7 @@ const extract = (html, tagNames, setAttribute, scripting) => {
       attributes = null
       encoding = null
       hasFontBreakoutAttribute = false
+      const outsideTemplate = htmlTemplateDepth === 0
       if (FOREIGN_CONTENT_BREAKOUT_ELEMENTS.has(name)) {
         breakOutOfForeignContent()
       }
@@ -171,7 +187,7 @@ const extract = (html, tagNames, setAttribute, scripting) => {
         templates.unshift(isHtmlTemplate)
         if (isHtmlTemplate) htmlTemplateDepth++
       }
-      if (htmlTemplateDepth === 0 && targets.has(name)) attributes = {}
+      if (outsideTemplate && targets.has(name)) attributes = {}
     },
     onattribute: (name, value, quote) => {
       if (attributes !== null) setAttribute(attributes, name, value, quote)
@@ -226,5 +242,10 @@ const extract = (html, tagNames, setAttribute, scripting) => {
 
 module.exports = html => extract(html, SCRIPT_TAGS, setLastValue, true).script
 
-module.exports.elements = (html, tagNames, { scripting = true } = {}) =>
-  extract(html, tagNames, setFirstValue, scripting)
+module.exports.elements = (html, tagNames, options) => {
+  if (!Array.isArray(tagNames)) {
+    throw new TypeError('tagNames must be an array')
+  }
+  const { scripting = true } = options ?? {}
+  return extract(html, tagNames, setFirstValue, scripting)
+}
