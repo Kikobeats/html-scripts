@@ -345,3 +345,99 @@ test('a stray </template> after a self-closing script keeps later scripts', t =>
     [{ src: '/a.js' }, { src: '/b.js' }]
   )
 })
+
+test('noscript ends at its own end tag', t => {
+  const cases = [
+    '<noscript><noembed></noscript><script src="/a.js"></script>',
+    '<noscript><iframe></noscript><script src="/a.js"></script>',
+    '<noscript><script></noscript><script src="/a.js"></script>',
+    '<div><noscript></div><script src="/x.js"></script></noscript><script src="/a.js"></script>',
+    '<noscript><template></noscript ><script src="/a.js"></script>',
+    '<noscript></noscript/><script src="/a.js"></script>'
+  ]
+  for (const html of cases) {
+    t.deepEqual(parseIframe(html), [{ src: '/a.js' }], html)
+  }
+  t.deepEqual(parseIframe('<noscript><script src="/a.js"></script>'), [])
+})
+
+test('integration points depend on the namespace', t => {
+  const cases = [
+    '<math><title/><script src="/a.js"/><script src="/b.js"></script></math>',
+    '<svg><desc/><script src="/a.js"/><script src="/b.js"></script></svg>',
+    '<svg><mi><script src="/a.js"/><script src="/b.js"></script></mi></svg>'
+  ]
+  for (const html of cases) {
+    t.deepEqual(parseIframe(html), [{ src: '/a.js' }, { src: '/b.js' }], html)
+  }
+  t.deepEqual(
+    parseIframe(
+      '<svg><annotation-xml><foreignObject><script src="/a.js"/><script src="/b.js"></script></foreignObject></annotation-xml></svg>'
+    ),
+    [{ src: '/a.js' }]
+  )
+})
+
+test('html start tags break out of foreign content', t => {
+  t.deepEqual(
+    parseIframe(
+      '<svg><p><script src="/a.js"/><script src="/b.js"></script></svg>'
+    ),
+    [{ src: '/a.js' }]
+  )
+  t.deepEqual(
+    parseIframe(
+      '<math><div><style><script src="/a.js"></script></style></div></math>'
+    ),
+    []
+  )
+  t.deepEqual(
+    parseIframe(
+      '<svg><font color="red"><style><script src="/a.js"></script></style></svg>'
+    ),
+    []
+  )
+  t.deepEqual(
+    parseIframe(
+      '<svg><font><style><script src="/a.js"></script></style></font></svg>'
+    ),
+    [{ src: '/a.js' }]
+  )
+})
+
+test('a template inside svg is not inert', t => {
+  t.deepEqual(
+    parseIframe(
+      '<svg><template><script src="/a.js"></script></template></svg>'
+    ),
+    [{ src: '/a.js' }]
+  )
+  t.deepEqual(
+    parseIframe(
+      '<template><svg><template></template></svg><script src="/x.js"></script></template><script src="/a.js"></script>'
+    ),
+    [{ src: '/a.js' }]
+  )
+})
+
+test('svg and math keep the namespace they are nested in', t => {
+  t.deepEqual(
+    parseIframe(
+      '<math><svg><annotation-xml encoding="text/html"><style><script src="/a.js"></script></style></annotation-xml></svg></math>'
+    ),
+    []
+  )
+  t.deepEqual(
+    parseIframe(
+      '<svg><math><desc><style><script src="/a.js"></script></style></desc></math></svg>'
+    ),
+    []
+  )
+})
+
+test('a script tag cut off at the end of the input is not a script', t => {
+  t.deepEqual(parseIframe('<script src="/a'), [])
+  t.deepEqual(parseIframe('<p><script src="/a.js"></script><script src="/b'), [
+    { src: '/a.js' }
+  ])
+})
