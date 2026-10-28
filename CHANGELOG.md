@@ -2,6 +2,17 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## 2.0.0 (2026-10-28)
+
+
+### ⚠ BREAKING CHANGES
+
+* **deps:** htmlparser2 v11+ requires Node.js >= 20.19.
+
+### build
+
+* **deps:** upgrade htmlparser2 to v12 ([#22](https://github.com/Kikobeats/html-scripts/issues/22)) ([cae34d8](https://github.com/Kikobeats/html-scripts/commit/cae34d85fd234d293964e7c3e0e2c00e8bf14255)), closes [#20](https://github.com/Kikobeats/html-scripts/issues/20)
+
 ### 1.0.8 (2026-10-28)
 
 ### 1.0.7 (2026-10-27)
