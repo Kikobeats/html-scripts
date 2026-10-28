@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## 2.1.0 (2026-10-28)
+
+
+### Features
+
+* read any tags with elements(html, tagNames) ([#23](https://github.com/Kikobeats/html-scripts/issues/23)) ([0b71e59](https://github.com/Kikobeats/html-scripts/commit/0b71e59c8775ce4c25d22c854f033667851e020e))
+
 ### 2.0.3 (2026-10-28)
 
 ### 2.0.2 (2026-10-28)
