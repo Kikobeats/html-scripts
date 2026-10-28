@@ -30,7 +30,7 @@
     "src"
   ],
   "dependencies": {
-    "htmlparser2": "~10.1.0"
+    "htmlparser2": "~12.0.0"
   },
   "devDependencies": {
     "@commitlint/cli": "latest",
