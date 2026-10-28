@@ -441,3 +441,24 @@ test('a script tag cut off at the end of the input is not a script', t => {
     { src: '/a.js' }
   ])
 })
+
+test('svg directly inside a math annotation-xml is svg', t => {
+  t.deepEqual(
+    parseIframe(
+      '<math><annotation-xml><svg><desc><style><script src="/a.js"></script></style></desc></svg></annotation-xml></math>'
+    ),
+    []
+  )
+  t.deepEqual(
+    parseIframe(
+      '<math><annotation-xml><mrow><svg><desc><style><script src="/a.js"></script></style></desc></svg></mrow></annotation-xml></math>'
+    ),
+    [{ src: '/a.js' }]
+  )
+  t.deepEqual(
+    parseIframe(
+      '<math><annotation-xml><mi></mi><svg><desc><style><script src="/a.js"></script></style></desc></svg></annotation-xml></math>'
+    ),
+    []
+  )
+})

@@ -106,6 +106,8 @@ module.exports = html => {
   const scripts = []
   const namespaces = [HTML]
   const templates = []
+  const mathAnnotationDepths = []
+  let depth = 0
   let htmlTemplateDepth = 0
   let tagName = ''
   let attributes = null
@@ -113,6 +115,14 @@ module.exports = html => {
   let hasFontBreakoutAttribute = false
 
   const isInForeignContent = () => namespaces[0] !== HTML
+
+  const isChildOfMathAnnotation = () => mathAnnotationDepths[0] === depth - 1
+
+  const namespaceOfNested = name => {
+    if (!isInForeignContent()) return name
+    if (name === SVG && isChildOfMathAnnotation()) return SVG
+    return namespaces[0]
+  }
 
   const breakOutOfForeignContent = () => {
     for (let index = 0; namespaces[index] !== HTML; index++) {
@@ -122,6 +132,7 @@ module.exports = html => {
 
   const parser = new Parser({
     onopentagname: name => {
+      depth++
       tagName = name
       attributes = null
       encoding = null
@@ -130,7 +141,7 @@ module.exports = html => {
         breakOutOfForeignContent()
       }
       if (name === SVG || name === MATH) {
-        namespaces.unshift(isInForeignContent() ? namespaces[0] : name)
+        namespaces.unshift(namespaceOfNested(name))
       } else if (name === 'template') {
         const isHtmlTemplate = !isInForeignContent()
         templates.unshift(isHtmlTemplate)
@@ -153,9 +164,11 @@ module.exports = html => {
         scripts.push(attributes)
       } else if (INTEGRATION_CANDIDATES.has(name)) {
         const namespace = namespaces[0]
-        namespaces.unshift(
-          isIntegrationPoint(namespace, name, encoding) ? HTML : namespace
-        )
+        const isHtml = isIntegrationPoint(namespace, name, encoding)
+        namespaces.unshift(isHtml ? HTML : namespace)
+        if (name === ANNOTATION_XML && namespace === MATH && !isHtml) {
+          mathAnnotationDepths.unshift(depth)
+        }
       } else if (name === 'noscript') {
         if (!isInForeignContent()) {
           continueTokenizingFrom(
@@ -172,9 +185,11 @@ module.exports = html => {
     onclosetag: name => {
       if (NAMESPACE_STACK_ELEMENTS.has(name)) {
         namespaces.shift()
+        if (mathAnnotationDepths[0] === depth) mathAnnotationDepths.shift()
       } else if (name === 'template' && templates.shift()) {
         htmlTemplateDepth--
       }
+      depth--
     }
   })
   parser.isInForeignContext = isInForeignContent
