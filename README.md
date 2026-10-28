@@ -29,6 +29,34 @@ console.log(scripts)
 // ]
 ```
 
+### Other tags
+
+`elements` reads any set of tags with the same HTML parsing rules, and returns their attributes the way a browser DOM has them: values are strings, and a repeated attribute keeps its first value.
+
+```js
+const { elements } = require('html-scripts')
+
+const { meta, script } = elements(
+  '<meta name="generator" content="WordPress 6.4"><script async src="/app.js"></script>',
+  ['meta', 'script']
+)
+
+console.log(meta)
+// [ { name: 'generator', content: 'WordPress 6.4' } ]
+
+console.log(script)
+// [ { async: '', src: '/app.js' } ]
+```
+
+Tag names are lowercase. Tags inside `<template>` content, `<noscript>`, and raw text elements such as `<textarea>` are not read.
+
+Pass `{ scripting: false }` to parse the way a browser with JavaScript disabled does, where `<noscript>` content is markup:
+
+```js
+elements('<noscript><meta name="robots" content="noindex"></noscript>', ['meta'], { scripting: false })
+// { meta: [ { name: 'robots', content: 'noindex' } ] }
+```
+
 ## License
 
 **html-scripts** © [Kiko Beats](https://kikobeats.com), released under the [MIT](https://github.com/Kikobeats/html-scripts/blob/master/LICENSE.md) License.<br>
