@@ -74,3 +74,16 @@ test('read tags written as svg markup', t => {
     { script: [{ src: '/a.js' }], a: [{ href: '/b' }] }
   )
 })
+
+test('read noscript content as markup when scripting is off', t => {
+  const html =
+    '<noscript><meta name="n"><script src="/n.js"></script></noscript><meta name="kept">'
+  t.deepEqual(elements(html, ['meta', 'script']), {
+    meta: [{ name: 'kept' }],
+    script: []
+  })
+  t.deepEqual(elements(html, ['meta', 'script'], { scripting: false }), {
+    meta: [{ name: 'n' }, { name: 'kept' }],
+    script: [{ src: '/n.js' }]
+  })
+})

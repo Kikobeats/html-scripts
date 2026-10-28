@@ -114,7 +114,7 @@ const continueTokenizingFrom = (parser, index) => {
   parser.tokenizer.index = index - 1
 }
 
-const extract = (html, tagNames, setAttribute) => {
+const extract = (html, tagNames, setAttribute, scripting) => {
   const source = String(html)
   const targets = new Set(tagNames)
   const elements = {}
@@ -193,7 +193,7 @@ const extract = (html, tagNames, setAttribute) => {
           mathTextIntegrationDepths.unshift(depth)
         }
       } else if (name === 'noscript') {
-        if (!isInForeignContent()) {
+        if (scripting && !isInForeignContent()) {
           continueTokenizingFrom(
             parser,
             findNoscriptEnd(source, parser.endIndex + 1)
@@ -224,7 +224,7 @@ const extract = (html, tagNames, setAttribute) => {
   return elements
 }
 
-module.exports = html => extract(html, SCRIPT_TAGS, setLastValue).script
+module.exports = html => extract(html, SCRIPT_TAGS, setLastValue, true).script
 
-module.exports.elements = (html, tagNames) =>
-  extract(html, tagNames, setFirstValue)
+module.exports.elements = (html, tagNames, { scripting = true } = {}) =>
+  extract(html, tagNames, setFirstValue, scripting)
