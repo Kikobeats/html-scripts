@@ -73,10 +73,20 @@ const NAMESPACE_STACK_ELEMENTS = new Set([SVG, MATH, ...INTEGRATION_CANDIDATES])
 
 const NOSCRIPT_END = /<\/noscript[\t\n\f\r />]/gi
 
+const SCRIPT_TAGS = ['script']
+
 const getValue = (value, quote) => {
   if (quote === undefined) return true
   if (value === '1') return true
   return value
+}
+
+const setLastValue = (attributes, name, value, quote) => {
+  attributes[name] = getValue(value, quote)
+}
+
+const setFirstValue = (attributes, name, value) => {
+  if (!Object.hasOwn(attributes, name)) attributes[name] = value
 }
 
 const isHtmlEncoding = value => {
@@ -104,9 +114,11 @@ const continueTokenizingFrom = (parser, index) => {
   parser.tokenizer.index = index - 1
 }
 
-module.exports = html => {
+const extract = (html, tagNames, setAttribute) => {
   const source = String(html)
-  const scripts = []
+  const targets = new Set(tagNames)
+  const elements = {}
+  for (const name of targets) elements[name] = []
   const namespaces = [HTML]
   const templates = []
   const mathAnnotationDepths = []
@@ -158,23 +170,20 @@ module.exports = html => {
         const isHtmlTemplate = !isInForeignContent()
         templates.unshift(isHtmlTemplate)
         if (isHtmlTemplate) htmlTemplateDepth++
-      } else if (name === 'script' && htmlTemplateDepth === 0) {
-        attributes = {}
       }
+      if (htmlTemplateDepth === 0 && targets.has(name)) attributes = {}
     },
     onattribute: (name, value, quote) => {
-      if (attributes !== null) {
-        attributes[name] = getValue(value, quote)
-      } else if (tagName === ANNOTATION_XML) {
+      if (attributes !== null) setAttribute(attributes, name, value, quote)
+      if (tagName === ANNOTATION_XML) {
         if (name === 'encoding' && encoding === null) encoding = value
       } else if (tagName === 'font' && FONT_BREAKOUT_ATTRIBUTES.has(name)) {
         hasFontBreakoutAttribute = true
       }
     },
     onopentag: name => {
-      if (attributes !== null) {
-        scripts.push(attributes)
-      } else if (INTEGRATION_CANDIDATES.has(name)) {
+      if (attributes !== null) elements[name].push(attributes)
+      if (INTEGRATION_CANDIDATES.has(name)) {
         const namespace = namespaces[0]
         const isHtml = isIntegrationPoint(namespace, name, encoding)
         namespaces.unshift(isHtml ? HTML : namespace)
@@ -212,5 +221,10 @@ module.exports = html => {
   })
   parser.isInForeignContext = isInForeignContent
   parser.end(source)
-  return scripts
+  return elements
 }
+
+module.exports = html => extract(html, SCRIPT_TAGS, setLastValue).script
+
+module.exports.elements = (html, tagNames) =>
+  extract(html, tagNames, setFirstValue)
