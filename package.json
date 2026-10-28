@@ -80,16 +80,14 @@
   },
   "nano-staged": {
     "*.js": [
-      "git add",
-      "prettier-standard"
+      "npx @kikobeats/prettier-standard",
+      "standard --fix"
     ],
     "*.md": [
-      "git add",
       "standard-markdown"
     ],
     "package.json": [
-      "finepack",
-      "git add"
+      "finepack"
     ]
   },
   "simple-git-hooks": {
