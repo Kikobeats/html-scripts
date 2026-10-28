@@ -50,6 +50,13 @@ console.log(script)
 
 Tag names are lowercase. Tags inside `<template>` content, `<noscript>`, and raw text elements such as `<textarea>` are not read.
 
+Pass `{ scripting: false }` to parse the way a browser with JavaScript disabled does, where `<noscript>` content is markup:
+
+```js
+elements('<noscript><meta name="robots" content="noindex"></noscript>', ['meta'], { scripting: false })
+// { meta: [ { name: 'robots', content: 'noindex' } ] }
+```
+
 ## License
 
 **html-scripts** © [Kiko Beats](https://kikobeats.com), released under the [MIT](https://github.com/Kikobeats/html-scripts/blob/master/LICENSE.md) License.<br>
