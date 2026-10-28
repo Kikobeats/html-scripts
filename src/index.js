@@ -14,6 +14,8 @@ const SVG_HTML_INTEGRATION_POINTS = new Set([
   'title'
 ])
 const MATH_TEXT_INTEGRATION_POINTS = new Set(['mi', 'mn', 'mo', 'ms', 'mtext'])
+// These stay in MathML even when the current node is a text integration point.
+const MATH_TEXT_INTEGRATION_EXCEPTIONS = new Set(['malignmark', 'mglyph'])
 
 const FOREIGN_CONTENT_BREAKOUT_ELEMENTS = new Set([
   'b',
@@ -97,6 +99,7 @@ const findNoscriptEnd = (source, from) => {
   return match === null ? source.length : match.index
 }
 
+// The tokenizer increments index after this callback returns.
 const continueTokenizingFrom = (parser, index) => {
   parser.tokenizer.index = index - 1
 }
@@ -107,6 +110,8 @@ module.exports = html => {
   const namespaces = [HTML]
   const templates = []
   const mathAnnotationDepths = []
+  const mathTextIntegrationDepths = []
+  const mathExceptionDepths = []
   let depth = 0
   let htmlTemplateDepth = 0
   let tagName = ''
@@ -117,6 +122,10 @@ module.exports = html => {
   const isInForeignContent = () => namespaces[0] !== HTML
 
   const isChildOfMathAnnotation = () => mathAnnotationDepths[0] === depth - 1
+
+  const isMathTextIntegrationException = name =>
+    MATH_TEXT_INTEGRATION_EXCEPTIONS.has(name) &&
+    mathTextIntegrationDepths[0] === depth - 1
 
   const namespaceOfNested = name => {
     if (!isInForeignContent()) return name
@@ -137,11 +146,14 @@ module.exports = html => {
       attributes = null
       encoding = null
       hasFontBreakoutAttribute = false
-      if (isInForeignContent() && FOREIGN_CONTENT_BREAKOUT_ELEMENTS.has(name)) {
+      if (FOREIGN_CONTENT_BREAKOUT_ELEMENTS.has(name)) {
         breakOutOfForeignContent()
       }
       if (name === SVG || name === MATH) {
         namespaces.unshift(namespaceOfNested(name))
+      } else if (isMathTextIntegrationException(name)) {
+        namespaces.unshift(MATH)
+        mathExceptionDepths.unshift(depth)
       } else if (name === 'template') {
         const isHtmlTemplate = !isInForeignContent()
         templates.unshift(isHtmlTemplate)
@@ -166,8 +178,10 @@ module.exports = html => {
         const namespace = namespaces[0]
         const isHtml = isIntegrationPoint(namespace, name, encoding)
         namespaces.unshift(isHtml ? HTML : namespace)
-        if (name === ANNOTATION_XML && namespace === MATH && !isHtml) {
+        if (name === ANNOTATION_XML && namespace === MATH) {
           mathAnnotationDepths.unshift(depth)
+        } else if (isHtml && MATH_TEXT_INTEGRATION_POINTS.has(name)) {
+          mathTextIntegrationDepths.unshift(depth)
         }
       } else if (name === 'noscript') {
         if (!isInForeignContent()) {
@@ -176,16 +190,20 @@ module.exports = html => {
             findNoscriptEnd(source, parser.endIndex + 1)
           )
         }
-      } else if (name === 'font') {
-        if (hasFontBreakoutAttribute && isInForeignContent()) {
-          breakOutOfForeignContent()
-        }
+      } else if (name === 'font' && hasFontBreakoutAttribute) {
+        breakOutOfForeignContent()
       }
     },
     onclosetag: name => {
-      if (NAMESPACE_STACK_ELEMENTS.has(name)) {
+      if (mathExceptionDepths[0] === depth) {
+        mathExceptionDepths.shift()
+        namespaces.shift()
+      } else if (NAMESPACE_STACK_ELEMENTS.has(name)) {
         namespaces.shift()
         if (mathAnnotationDepths[0] === depth) mathAnnotationDepths.shift()
+        if (mathTextIntegrationDepths[0] === depth) {
+          mathTextIntegrationDepths.shift()
+        }
       } else if (name === 'template' && templates.shift()) {
         htmlTemplateDepth--
       }
