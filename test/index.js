@@ -244,6 +244,38 @@ test('annotation-xml with an html encoding keeps the script open', t => {
   }
 })
 
+test('a raw-text end tag may end with a solidus', t => {
+  t.deepEqual(
+    parseIframe('<script src="/a.js"></script/><script src="/b.js"></script>'),
+    [{ src: '/a.js' }, { src: '/b.js' }]
+  )
+  t.deepEqual(
+    parseIframe('<script src="/a.js"></SCRIPT/><script src="/b.js"></script>'),
+    [{ src: '/a.js' }, { src: '/b.js' }]
+  )
+  t.deepEqual(
+    parseIframe(
+      '<div><script src="/a.js"></script/foo></div><script src="/b.js"></script>'
+    ),
+    [{ src: '/a.js' }, { src: '/b.js' }]
+  )
+  t.deepEqual(
+    parseIframe(
+      '<script src="/a.js">var x="</script/><script src=\'/evil.js\'>"</script><script src="/b.js"></script>'
+    ),
+    [{ src: '/a.js' }, { src: '/evil.js' }, { src: '/b.js' }]
+  )
+  t.deepEqual(parseIframe('<style></style/><script src="/b.js"></script>'), [
+    { src: '/b.js' }
+  ])
+  t.deepEqual(
+    parseIframe(
+      '<script src="/a.js"></scripting><script src="/b.js"></script>'
+    ),
+    [{ src: '/a.js' }]
+  )
+})
+
 test('a script end tag may have whitespace before >', t => {
   for (const gap of [' ', '\n', '\t', '\r', '\f']) {
     t.deepEqual(

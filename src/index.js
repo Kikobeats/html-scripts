@@ -13,6 +13,18 @@ const Tokenizer = require(join(
 const IN_TAG_NAME = 3
 
 class ForeignTokenizer extends Tokenizer {
+  // htmlparser2 ends a raw-text end tag on ">" or whitespace only. The HTML
+  // tokenizer also ends it on "/", so "</script/" (and the same for style,
+  // title, textarea, and xmp) swallows every later tag until a canonical
+  // end tag. Treat the solidus as whitespace; the closing-tag state then
+  // finishes the tag at the next ">".
+  stateInSpecialTag (char) {
+    if (this.sequenceIndex === this.currentSequence.length && char === 47) {
+      return super.stateInSpecialTag(32)
+    }
+    return super.stateInSpecialTag(char)
+  }
+
   stateBeforeSpecialS (char) {
     if (this.cbs.foreignContext[0] === true) {
       this.state = IN_TAG_NAME
