@@ -2,7 +2,7 @@
   "name": "html-scripts",
   "description": "Parse HTML markup and extract every script tag, source URL, and inline script content.",
   "homepage": "https://github.com/Kikobeats/html-scripts",
-  "version": "2.0.1",
+  "version": "2.0.2",
   "main": "src/index.js",
   "author": {
     "email": "josefrancisco.verdu@gmail.com",
