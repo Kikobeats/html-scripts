@@ -75,6 +75,24 @@ test('meta breaks out of svg like the html parser does', t => {
   )
 })
 
+test('lowercase svg tag names match the parser camelCase', t => {
+  t.deepEqual(
+    elements(
+      '<svg><linearGradient id="g"></linearGradient><foreignObject id="f"><script src="/a.js"/></foreignObject></svg><script src="/b.js"></script>',
+      ['lineargradient', 'foreignobject', 'script']
+    ),
+    {
+      lineargradient: [{ id: 'g' }],
+      foreignobject: [{ id: 'f' }],
+      script: [{ src: '/a.js' }]
+    }
+  )
+  t.deepEqual(
+    elements('<svg><clipPath id="c"></clipPath></svg>', ['clipPath']),
+    { clipPath: [{ id: 'c' }] }
+  )
+})
+
 test('read tags written as svg markup', t => {
   t.deepEqual(
     elements('<svg><script src="/a.js"/><a href="/b"></a></svg>', [

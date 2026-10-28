@@ -132,6 +132,8 @@ const continueTokenizingFrom = (parser, index) => {
 const extract = (html, tagNames, setAttribute, scripting) => {
   const source = String(html)
   const targets = new Set(tagNames)
+  // `script` is never recased, so the default export skips the lowercase lookup.
+  const foldTagCase = targets.size !== 1 || !targets.has('script')
   const elements = {}
   for (const name of targets) defineOwn(elements, name, [])
   const namespaces = [HTML]
@@ -143,6 +145,7 @@ const extract = (html, tagNames, setAttribute, scripting) => {
   let htmlTemplateDepth = 0
   let tagName = ''
   let attributes = null
+  let collectedAs = null
   let encoding = null
   let hasFontBreakoutAttribute = false
 
@@ -171,6 +174,7 @@ const extract = (html, tagNames, setAttribute, scripting) => {
       depth++
       tagName = name
       attributes = null
+      collectedAs = null
       encoding = null
       hasFontBreakoutAttribute = false
       const outsideTemplate = htmlTemplateDepth === 0
@@ -187,7 +191,15 @@ const extract = (html, tagNames, setAttribute, scripting) => {
         templates.unshift(isHtmlTemplate)
         if (isHtmlTemplate) htmlTemplateDepth++
       }
-      if (outsideTemplate && targets.has(name)) attributes = {}
+      if (outsideTemplate) {
+        // htmlparser2 spells some SVG tags in camelCase. Callers ask in lowercase.
+        if (targets.has(name)) collectedAs = name
+        else if (foldTagCase) {
+          const lower = name.toLowerCase()
+          if (lower !== name && targets.has(lower)) collectedAs = lower
+        }
+        if (collectedAs !== null) attributes = {}
+      }
     },
     onattribute: (name, value, quote) => {
       if (attributes !== null) setAttribute(attributes, name, value, quote)
@@ -198,7 +210,7 @@ const extract = (html, tagNames, setAttribute, scripting) => {
       }
     },
     onopentag: name => {
-      if (attributes !== null) elements[name].push(attributes)
+      if (collectedAs !== null) elements[collectedAs].push(attributes)
       if (INTEGRATION_CANDIDATES.has(name)) {
         const namespace = namespaces[0]
         const isHtml = isIntegrationPoint(namespace, name, encoding)
